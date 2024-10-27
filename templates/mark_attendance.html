@@ -1,0 +1,40 @@
+{% extends 'base.html' %} {% block title %}Mark Attendance{% endblock %} <br />
+{% block content %}
+
+<h2 class="display-6 mt-3 mb-5" class="display-6">Mark Attendance</h2>
+<form action="{{ url_for('mark_attendance') }}" method="POST">
+  <div class="d-flex mb-3" style="max-width: 375px">
+    <label class="form-label me-2" for="date">Date:</label>
+    <input class="form-control" type="date" id="date" name="date" required />
+  </div>
+
+  <h3 class="display-6 mb-3">Students</h3>
+  {% for student in students %}
+  <div class="d-flex gap-4 mb-3">
+    <label class="form-check-label">
+      <input
+        class="form-check-input"
+        type="radio"
+        name="status_{{ student.id }}"
+        value="present"
+        required
+      />
+      Present
+    </label>
+    <label class="form-check-label">
+      <input
+        class="form-check-input"
+        type="radio"
+        name="status_{{ student.id }}"
+        value="absent"
+      />
+      Absent
+    </label>
+    - {{ student.name }} ({{ student.roll_number }})
+  </div>
+  {% endfor %}
+
+  <button class="btn btn-primary" type="submit">Submit Attendance</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %} {% block title %}Register{% endblock %} <br />
+{% block content %}
+
+<h2 class="display-6 mt-3 mb-5" class="display-6">Register</h2>
+<form
+  style="max-width: 375px"
+  action="{{ url_for('add_student') }}"
+  method="POST"
+>
+  <div class="mb-3">
+    <label for="name" class="form-label">Name:</label>
+    <input class="form-control" type="text" id="name" name="name" required />
+  </div>
+  <div class="mb-3">
+    <label for="roll_number" class="form-label">Student ID:</label>
+    <input
+      class="form-control"
+      type="text"
+      id="roll_number"
+      name="roll_number"
+      required
+    />
+  </div>
+  <div class="mb-3">
+    <select
+      name="class_name"
+      class="form-select"
+      aria-label="Select the module"
+      required
+    >
+      <option selected>Select your Module</option>
+      <option value="Python Programing">Python Programing</option>
+      <option value="Java Programing">Java Programing</option>
+      <option value="Networking Basics">Networking Basics</option>
+    </select>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Register</button>
+</form>
+
+{% endblock %}

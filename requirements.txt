@@ -1,0 +1,4 @@
+Flask
+Flask-SQLAlchemy
+xhtml2pdf
+qrcode[pil]

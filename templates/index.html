@@ -1,0 +1,49 @@
+{% extends 'base.html' %} {% block title %}Home{% endblock %} <br />
+{% block content %}
+
+<h1 class="display-6 mt-3 mb-3">Registered Students</h1>
+
+<form style="max-width: 400px" class="d-flex" method="GET" action="/">
+  <input
+    class="form-control me-2"
+    type="search"
+    name="query"
+    placeholder="Search by name"
+    aria-label="Search"
+    required
+  />
+  <button class="btn btn-outline-success" type="submit">Search</button>
+</form>
+
+<table class="table table-striped mt-5">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Student ID</th>
+      <th>Class</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for student in students %}
+    <tr>
+      <td>{{ student.name }}</td>
+      <td>{{ student.roll_number }}</td>
+      <td>{{ student.class_name }}</td>
+      <td>
+        <a
+          class="btn btn-link"
+          href="{{ url_for('student_details', student_id=student.id) }}"
+          >View Details</a
+        >
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4">No students found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

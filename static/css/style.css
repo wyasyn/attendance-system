@@ -1,0 +1,20 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 100dvh;
+}
+.main {
+  flex: 1;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  padding-block: 3rem;
+  margin: 5rem;
+  text-align: center;
+}

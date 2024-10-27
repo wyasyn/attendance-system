@@ -1,0 +1,43 @@
+{% extends 'base.html' %} {% block title %}View Attendance Records{% endblock %}
+<br />
+{% block content %}
+
+<form
+  style="max-width: 400px"
+  class="d-flex mt-3"
+  action="{{ url_for('view_records') }}"
+  method="GET"
+>
+  <input
+    class="form-control me-2"
+    type="text"
+    id="query"
+    name="query"
+    placeholder="Search by name or date"
+  />
+  <button class="btn btn-outline-success" type="submit">Search</button>
+</form>
+
+<h3 class="mt-5">Attendance Records</h3>
+<table class="table table-striped mt-3" border="1">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Student Name</th>
+      <th>Student ID</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for record in attendance_records %}
+    <tr>
+      <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+      <td>{{ record.student.name }}</td>
+      <td>{{ record.student.roll_number }}</td>
+      <td>{{ record.status }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

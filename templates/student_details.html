@@ -1,0 +1,20 @@
+{% extends 'base.html' %} {% block title %}Student Details{% endblock %}
+<br />
+{% block content %}
+
+<h1 class="display-6 my-3" class="display-6">Student Details</h1>
+<p><strong>Name:</strong> {{ student.name }}</p>
+<p><strong>Student ID:</strong> {{ student.roll_number }}</p>
+<p><strong>Module:</strong> {{ student.class_name }}</p>
+
+<figure class="figure">
+  <img
+    src="{{ url_for('static', filename='qr_codes/' + student.roll_number + '.png') }}"
+    alt="QR Code for {{ student.name }}"
+    class="figure-img img-fluid rounded"
+  />
+
+  <figcaption class="figure-caption">Save this QR-code.</figcaption>
+</figure>
+
+{% endblock %}
