@@ -4,6 +4,12 @@ This is a simple Flask-based application for managing student attendance, featur
 
 ## Getting Started
 
+This tool is required for generating PDFs in the application.
+
+Windows:
+
+[Download and install wkhtmltopdf from [https://wkhtmltopdf.org/downloads.html](https://wkhtmltopdf.org/downloads.html).](https://wkhtmltopdf.org/downloads.html)
+
 Open the folder with vs code
 
 ### Installation
@@ -25,16 +31,6 @@ venv\Scripts\activate
 ```bash
 pip install -r requirements.txt
 ```
-
-This tool is required for generating PDFs in the application.
-
-Windows:
-
-Download and install wkhtmltopdf from https://wkhtmltopdf.org/downloads.html.
-
-Set Up Configuration:
-
-Create a .env file in the root directory to store environment variables, such as the database URI or any secret keys if required:
 
 ```bash
 python app.py
