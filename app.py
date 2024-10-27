@@ -1,16 +1,23 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import IntegrityError
 from xhtml2pdf import pisa
 import qrcode
 import os
+import logging
 from datetime import datetime, timezone
 
+# Configure Flask app and SQLAlchemy
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///attendance.db'
+app.secret_key = 'your_secret_key'  # Required for flash messages
 db = SQLAlchemy(app)
 
+# Configure logging
+logging.basicConfig(filename='error.log', level=logging.ERROR)
 
+# Models
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
@@ -27,7 +34,7 @@ class Attendance(db.Model):
     student = db.relationship('Student', backref='attendances')
     __table_args__ = (db.UniqueConstraint('date', 'student_id', name='unique_attendance_constraint'),)
 
-
+# Utility functions
 def ensure_directory_exists(path):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -37,13 +44,12 @@ def link_callback(uri, rel):
         return os.path.join(os.path.abspath("."), uri)
     return uri
 
-
+# Routes
 @app.route('/')
 def index():
     search_query = request.args.get('query')
     students = Student.query.filter(Student.name.contains(search_query)).all() if search_query else Student.query.all()
     return render_template('index.html', students=students)
-
 
 @app.route('/add_student', methods=['GET', 'POST'])
 def add_student():
@@ -62,17 +68,20 @@ def add_student():
         
         student = Student(name=name, roll_number=roll_number, class_name=class_name, qr_code_path=qr_code_path)
         db.session.add(student)
-        db.session.commit()
-        
-        return redirect(url_for('student_details', student_id=student.id))
+        try:
+            db.session.commit()
+            flash("Student added successfully.", "success")
+            return redirect(url_for('student_details', student_id=student.id))
+        except IntegrityError:
+            db.session.rollback()
+            flash("Roll number already exists. Please try again with a unique roll number.", "danger")
+            return redirect(url_for('add_student'))
     return render_template('add_student.html')
-
 
 @app.route('/student_details/<int:student_id>', methods=['GET'])
 def student_details(student_id):
     student = Student.query.get_or_404(student_id)
     return render_template('student_details.html', student=student)
-
 
 @app.route('/mark_attendance', methods=['GET', 'POST'])
 def mark_attendance():
@@ -87,11 +96,13 @@ def mark_attendance():
                 status = request.form.get(f'status_{student.id}', 'absent')
                 attendance = Attendance(date=date_obj, student_id=student.id, status=status)
                 db.session.add(attendance)
-
-        db.session.commit()
-        return redirect(url_for('index'))
+        try:
+            db.session.commit()
+            flash("Attendance marked successfully.", "success")
+        except IntegrityError:
+            db.session.rollback()
+            flash("Attendance for some students already exists for this date.", "danger")
     return render_template('mark_attendance.html', students=students)
-
 
 @app.route('/check_in/<roll_number>', methods=['POST', 'GET'])
 def check_in(roll_number):
@@ -119,16 +130,15 @@ def error():
     message = request.args.get('message')
     return render_template('error.html', message=message)
 
-
-
 @app.route('/view_records', methods=['GET'])
 def view_records():
     search_query = request.args.get('query')
     students = Student.query.filter(Student.name.contains(search_query)).all() if search_query else Student.query.all()
-    attendance_records = Attendance.query.options(joinedload(Attendance.student)).all()
+    attendance_records = Attendance.query.options(joinedload(Attendance.student)).filter(
+        Attendance.student.has(Student.name.contains(search_query))
+    ).all() if search_query else Attendance.query.options(joinedload(Attendance.student)).all()
     
     return render_template('view_records.html', students=students, attendance_records=attendance_records)
-
 
 @app.route('/generate_report', methods=['GET'])
 def generate_report():
@@ -137,14 +147,13 @@ def generate_report():
     # Fetch all attendance records and group by date
     attendance_records = Attendance.query.all()
     
-    # Get the total number of records
-    total_records = len(attendance_records)
-
+    # Handle empty report case
+    if not attendance_records:
+        return render_template('error.html', message="No attendance records found for the report.")
+    
     # Prepare the date for rendering
-    if attendance_records:
-        report_date = attendance_records[0].date  
-    else:
-        report_date = datetime.now().date()  
+    report_date = attendance_records[0].date  
+    total_records = len(attendance_records)
 
     rendered = render_template('report_template.html', 
                                attendance_records=attendance_records,
@@ -163,12 +172,11 @@ def page_not_found(error):
 
 @app.errorhandler(Exception)
 def handle_exception(error):
-    
-    print(f"An error occurred: {error}")
+    logging.error(f"An error occurred: {error}")
     return render_template('general_error.html', error=error), 500
-
 
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", debug=True)
+
