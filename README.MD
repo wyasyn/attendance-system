@@ -17,7 +17,7 @@ Open the folder with vs code
 Create a Virtual Environment:
 
 ```bash
-python3 -m venv venv
+python -m venv venv
 ```
 
 Activate the Virtual Environment:
