@@ -1,3 +1,4 @@
 instance
 venv
 error.log
+.env

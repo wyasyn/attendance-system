@@ -2,3 +2,5 @@ Flask
 Flask-SQLAlchemy
 xhtml2pdf
 qrcode[pil]
+resend
+python-dotenv

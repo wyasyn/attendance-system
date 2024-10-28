@@ -4,14 +4,22 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 from xhtml2pdf import pisa
 import qrcode
+import resend
 import os
 import logging
+import base64
 from datetime import datetime, timezone
+from dotenv import load_dotenv 
+
+# Load environment variables
+load_dotenv()
+
+resend.api_key = os.getenv("RESEND_API_KEY")
 
 # Configure Flask app and SQLAlchemy
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///attendance.db'
-app.secret_key = 'your_secret_key'  # Required for flash messages
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.secret_key = os.getenv('SECRET_KEY') 
 db = SQLAlchemy(app)
 
 # Configure logging
@@ -23,6 +31,7 @@ class Student(db.Model):
     name = db.Column(db.String(50), nullable=False)
     roll_number = db.Column(db.String(20), unique=True, nullable=False)
     class_name = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
     qr_code_path = db.Column(db.String(100), nullable=True)
 
 class Attendance(db.Model):
@@ -44,6 +53,30 @@ def link_callback(uri, rel):
         return os.path.join(os.path.abspath("."), uri)
     return uri
 
+def send_email_with_qr(email, name, qr_code_path):
+    # Read the QR code image and encode it as base64
+    with open(qr_code_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+    
+    params = {
+        "from": "Attendance <onboarding@resend.dev>",
+        "to": email,
+        "subject": "Student Registration Successful",
+        "html": f"<p>Dear {name},</p><p>Your registration was successful.</p>",
+        "attachments": [
+            {
+                "filename": "qr_code.png",
+                "content": encoded_string,  
+                "type": "image/png"
+            }
+        ],
+    }
+    try:
+        response = resend.Emails.send(params)
+        print("Email sent:", response)
+    except Exception as e:
+        print("Failed to send email:", e)
+
 # Routes
 @app.route('/')
 def index():
@@ -57,7 +90,9 @@ def add_student():
         name = request.form['name']
         roll_number = request.form['roll_number']
         class_name = request.form['class_name']
-        
+        email = request.form['email']  # Capture email from form data
+
+        # Generate QR code
         check_in_url = url_for('check_in', roll_number=roll_number, _external=True)
         qr = qrcode.make(check_in_url)
         
@@ -66,17 +101,23 @@ def add_student():
         qr_code_path = os.path.join(qr_code_dir, f'{roll_number}.png')
         qr.save(qr_code_path)
         
-        student = Student(name=name, roll_number=roll_number, class_name=class_name, qr_code_path=qr_code_path)
+        # Add student to the database
+        student = Student(name=name, roll_number=roll_number, class_name=class_name, email=email, qr_code_path=qr_code_path)
         db.session.add(student)
         try:
             db.session.commit()
             flash("Student added successfully.", "success")
+
+            # Send email with QR code
+            send_email_with_qr(email, name, qr_code_path)
+            
             return redirect(url_for('student_details', student_id=student.id))
         except IntegrityError:
             db.session.rollback()
-            flash("Roll number already exists. Please try again with a unique roll number.", "danger")
+            flash("Roll number or email already exists. Please try again with unique values.", "danger")
             return redirect(url_for('add_student'))
     return render_template('add_student.html')
+
 
 @app.route('/student_details/<int:student_id>', methods=['GET'])
 def student_details(student_id):
