@@ -6,14 +6,14 @@ Attendance Management System
 
 ## 2. Statement of the Problem
 
-The Attendance Management System addresses the challenges faced by educational institutions in efficiently managing student attendance records. Manual tracking of attendance is often time-consuming and prone to errors. This system automates the attendance recording process through QR code scanning and a user-friendly interface, ensuring accurate tracking of student presence. The attendace feature enhances communication by allowing students to check their attendance records, while administrators can generate detailed attendance reports, streamlining overall attendance management.
+The Attendance Management System addresses the challenges faced by educational institutions in efficiently managing student attendance records. Manual tracking of attendance is often time-consuming and prone to errors. This system automates the attendance recording process through QR code scanning and a user-friendly interface, ensuring accurate tracking of student presence. The attendance feature enhances communication by allowing students to check their attendance records, while administrators can generate detailed attendance reports, streamlining overall attendance management.
 
 ## 3. Tools Used
 
 - **Frontend**: HTML, CSS, JavaScript, Bootstrap
 - **Backend**: Flask
 - **Database**: SQLite
-- **QR Code Generation**: qrcode library
+- **QR Code Generation**: qr-code library
 - **PDF Generation**: xhtml2pdf library
 
 ## 4. Design
